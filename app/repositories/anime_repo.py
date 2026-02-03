@@ -2,20 +2,22 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, exists , delete
 from sqlalchemy.engine import CursorResult
 from app.models.anime import Anime, AnimeStatus, AnimeSeason
+from app.schemas.anime import AnimeCreate
 from typing import Optional, cast
 
 class AnimeRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
     
-    async def create(self, anime_data: dict) -> Anime:
-        if 'status' in anime_data and isinstance(anime_data['status'], str):
-            anime_data['status'] = AnimeStatus(anime_data['status'])
+    async def create(self, anime_data: AnimeCreate) -> Anime:
+        data_dict = anime_data.model_dump(exclude_unset=True)
+        if 'status' in data_dict and isinstance(data_dict['status'], str):
+            data_dict['status'] = AnimeStatus(data_dict['status'])
         
-        if 'season' in anime_data and isinstance(anime_data['season'], str):
-            anime_data['season'] = AnimeSeason(anime_data['season'])
+        if 'season' in data_dict and isinstance(data_dict['season'], str):
+            data_dict['season'] = AnimeSeason(data_dict['season'])
         
-        anime = Anime(**anime_data)
+        anime = Anime(**data_dict)
         self.session.add(anime)
         await self.session.commit()
         await self.session.refresh(anime)
