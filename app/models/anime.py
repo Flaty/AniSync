@@ -1,11 +1,10 @@
 from sqlalchemy import Text
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.types import DateTime
+from app.models.base import Base
 from datetime import datetime, timezone
 import enum
 
-class Base(DeclarativeBase):
-    pass
 
 class AnimeStatus(enum.Enum):
     AIRING = 'airing'
