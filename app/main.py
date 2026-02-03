@@ -1,16 +1,18 @@
 from fastapi import FastAPI, Request, Depends
 from typing import Annotated
 from contextlib import asynccontextmanager
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from external.jikan_client import JikanClient
+from database import get_db
+from repositories.anime_repo import AnimeRepository
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     jikan_client = JikanClient()
     app.state.jikan_client = jikan_client
-
     yield
-
     await jikan_client.close()
 
 app = FastAPI(lifespan=lifespan)
