@@ -2,7 +2,7 @@ services:
   app:
     build:
       context: .
-      target: builder  
+      target: builder
     container_name: anisync_app_dev
     ports:
       - "8000:8000"
@@ -10,12 +10,58 @@ services:
       - DATABASE_URL=postgresql+psycopg://anime:anime@postgres:5432/anisync
       - REDIS_URL=redis://redis:6379
       - PYTHONUNBUFFERED=1
-      - DEBUG=true  
+      - DEBUG=true
+      - UV_NO_DEV=0
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_started
     volumes:
-      - .:/app 
-    command: sh -c "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /app"
+      - uv_cache:/root/.cache/uv
+    develop:
+      watch:
+        - action: sync
+          path: .
+          target: /app
+          ignore:
+            - .venv/
+            - __pycache__/
+            - "*.pyc"
+            - "*.pyo"
+            - "*.egg-info/"
+        - action: rebuild
+          path: ./uv.lock
+        - action: rebuild
+          path: ./pyproject.toml
+    command: sh -c "uv sync --all-extras && alembic upgrade head && uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
+
+  postgres:
+    image: postgres:16
+    container_name: anisync_db_dev
+    environment:
+      POSTGRES_USER: anime
+      POSTGRES_PASSWORD: anime
+      POSTGRES_DB: anisync
+    ports:
+      - "5433:5432" 
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U anime"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: anisync_redis_dev
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data_dev:/data
+
+volumes:
+  uv_cache:
+  postgres_data_dev:
+  redis_data_dev:
