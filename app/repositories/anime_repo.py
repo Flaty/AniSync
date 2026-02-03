@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, exists , delete
 from sqlalchemy.engine import CursorResult
-from models.anime import Anime, AnimeStatus, AnimeSeason
+from app.models.anime import Anime, AnimeStatus, AnimeSeason
 from typing import Optional, cast
 
 class AnimeRepository:

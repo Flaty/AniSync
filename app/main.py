@@ -3,9 +3,9 @@ from typing import Annotated
 from contextlib import asynccontextmanager
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from external.jikan_client import JikanClient
-from database import get_db
-from repositories.anime_repo import AnimeRepository
+from app.external.jikan_client import JikanClient
+from app.database import get_db
+from app.repositories.anime_repo import AnimeRepository
 
 
 @asynccontextmanager

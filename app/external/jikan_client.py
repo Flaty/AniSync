@@ -1,7 +1,7 @@
 import httpx
 from aiolimiter import AsyncLimiter
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
-from models.anime import AnimeSeason, AnimeStatus
+from app.models.anime import AnimeSeason, AnimeStatus
 
 
 class JikanClient:

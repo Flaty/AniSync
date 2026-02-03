@@ -1,6 +1,6 @@
 from logging.config import fileConfig
-from models.anime import Base
-from config import settings
+from app.models.anime import Base
+from app.config import settings
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
