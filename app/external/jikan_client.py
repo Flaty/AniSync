@@ -41,7 +41,7 @@ class JikanClient:
             season: AnimeSeason | None = None,
             order_by: str | None = 'scored_by'):
         params = {'q': query, 'page': page, 'limit': limit, 'type': type, 'status': status, 'order_by' : order_by, 'season': season}
-        data = await self._request('GET', 'anime/', params=params)
+        data = await self._request('GET', 'anime', params=params)
         return data['data']
     async def close(self):
         await self.client.aclose()

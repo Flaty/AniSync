@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, exists , delete
 from sqlalchemy.engine import CursorResult
 from app.models.anime import Anime, AnimeStatus, AnimeSeason
-from app.schemas.anime import AnimeCreate
+from app.schemas.anime import AnimeCreate, AnimeUpdate
 from typing import Optional, cast
 
 class AnimeRepository:
@@ -50,12 +50,16 @@ class AnimeRepository:
         result = await self.session.scalars(stmt)
         return list(result.all())
     
-    async def update(self, anime_id: int, update_data: dict) -> Optional[Anime]:
+    async def update(self, anime_id: int, update_data: AnimeUpdate) -> Optional[Anime]:
+        values = update_data.model_dump(exclude_unset=True)
+
+        if not values:
+            return await self.get_by_id(anime_id)
 
         stmt = (
             update(Anime)
             .where(Anime.id == anime_id)
-            .values(**update_data)
+            .values(**values)
             .returning(Anime)
         )
 
