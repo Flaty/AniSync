@@ -1,0 +1,21 @@
+services:
+  app:
+    build:
+      context: .
+      target: builder  
+    container_name: anisync_app_dev
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+psycopg://anime:anime@postgres:5432/anisync
+      - REDIS_URL=redis://redis:6379
+      - PYTHONUNBUFFERED=1
+      - DEBUG=true  
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    volumes:
+      - .:/app 
+    command: sh -c "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /app"

@@ -1,0 +1,85 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# PyCharm / VS Code / IDE
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+*.code-workspace
+
+# ОС-специфичный мусор
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Логи и временные файлы
+*.log
+*.log.*
+logs/
+tmp/
+temp/
+.cache/
+coverage.xml
+htmlcov/
+.coverage
+.coverage.*
+
+# Зависимости и сборки
+pip-wheel-metadata/
+dist/
+build/
+*.egg-info/
+*.egg
+*.whl
+
+# Docker
+Dockerfile.*
+docker-compose.override.yml
+*.dockerignore
+
+# Alembic / миграции (обычно не коммитят, если нет необходимости)
+alembic/versions/*  # ← если хочешь коммитить миграции — удали эту строку
+
+# Базы данных (если локально тестируешь)
+*.sqlite3
+*.db
+*.db-shm
+*.db-wal
+
+# Секреты и личные файлы
+.env
+.env.*
+.env.local
+.env.development
+.env.production
+*.pem
+*.key
+*.p12
+
+# Тесты и coverage
+htmlcov/
+.coverage
+coverage.xml
+.tox/
+.nox/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Другое
+*.bak
+*.swp
+*.swo
+*~
