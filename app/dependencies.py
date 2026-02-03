@@ -19,7 +19,5 @@ def get_jikan_client(request: Request) -> JikanClient:
         raise RuntimeError("Jikan client не инициализирован в lifespan, baka!")
     return client
 
-
-# Type-алиасы для удобства (используем в роутах как AnimeRepoDepends)
 AnimeRepoDepends = Annotated[AnimeRepository, Depends(get_anime_repo)]
 JikanDepends = Annotated[JikanClient, Depends(get_jikan_client)]

@@ -5,10 +5,6 @@ router = APIRouter(
     tags=['Anime']
 )
 
-@router.get('/health')
-async def status():
-    return {'status': 'AniSync онлайн!'}
-
 @router.get('/top/anime')
 async def top_anime(client: JikanDepends):
     top = await client.get_top_anime(limit=5)
