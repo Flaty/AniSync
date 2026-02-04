@@ -1,13 +1,21 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update, exists , delete
+from sqlalchemy import select, update, exists , delete, insert
 from sqlalchemy.engine import CursorResult
 from app.models.anime import Anime, AnimeStatus, AnimeSeason
 from app.schemas.anime import AnimeCreate, AnimeUpdate
-from typing import Optional, cast
+from sqlalchemy.orm import selectinload
+from app.repositories.genre_repo import GenreRepository
+from app.models.genre import anime_genres
+from typing import Optional, cast, TypedDict
+
+class GenreInput(TypedDict):
+    name: str
+    mal_id: Optional[int]
 
 class AnimeRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
+        self.genre_repo = GenreRepository(session)
     
     async def create(self, anime_data: AnimeCreate) -> Anime:
         data_dict = anime_data.model_dump(exclude_unset=True)
@@ -81,3 +89,30 @@ class AnimeRepository:
         stmt = select(exists().where(Anime.mal_id == mal_id))
         result = await self.session.execute(stmt)
         return cast(bool, result.scalar())
+    
+    async def sync_genres(self, anime_id: int, genres_input: list[GenreInput]) -> Optional[Anime]:
+        anime = await self.get_by_id(anime_id)  
+        if not anime:
+            return None
+        
+        new_genre_ids = set()
+        for g in genres_input:
+            genre = await self.genre_repo.upsert(
+                name=g['name'],
+                mal_id=g.get('mal_id')
+            )
+            new_genre_ids.add(genre.id)
+        
+        # Атомарный sync
+        await self.session.execute(
+            delete(anime_genres).where(anime_genres.c.anime_id == anime_id)
+        )
+
+        if new_genre_ids:
+            values = [{'anime_id': anime_id, 'genre_id': gid} for gid in new_genre_ids]
+            await self.session.execute(insert(anime_genres), values)
+
+        await self.session.commit()
+        await self.session.refresh(anime, attribute_names=['genres']) 
+
+        return anime
