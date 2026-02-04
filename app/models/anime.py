@@ -1,5 +1,5 @@
 from sqlalchemy import Text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import DateTime
 from app.models.base import Base
 from datetime import datetime, timezone
@@ -39,4 +39,11 @@ class Anime(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc), 
-        onupdate=lambda: datetime.now(timezone.utc)) 
+        onupdate=lambda: datetime.now(timezone.utc))
+    
+    genres: Mapped[list['Genre']] = relationship(
+        'Genre',
+        secondary='anime_genres', 
+        back_populates='animes',
+        lazy='selectin'
+    )
