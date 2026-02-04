@@ -43,5 +43,8 @@ class JikanClient:
         params = {'q': query, 'page': page, 'limit': limit, 'type': type, 'status': status, 'order_by' : order_by, 'season': season}
         data = await self._request('GET', 'anime', params=params)
         return data['data']
+    
+    
+
     async def close(self):
         await self.client.aclose()
