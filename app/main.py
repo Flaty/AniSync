@@ -1,15 +1,26 @@
-from fastapi import FastAPI, Request, Depends
 from contextlib import asynccontextmanager
 
+import redis.asyncio as aioredis
+from fastapi import FastAPI
+
+from app.config import settings
 from app.external.jikan_client import JikanClient
-from app.api import anime
+from app.api import anime, auth
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     jikan_client = JikanClient()
     app.state.jikan_client = jikan_client
+
+    redis_client = aioredis.from_url(settings.redis_url)
+    app.state.redis = redis_client
+
     yield
+
     await jikan_client.close()
+    await redis_client.aclose()
+
 
 app = FastAPI(
     title='AniSync Api',
@@ -18,6 +29,8 @@ app = FastAPI(
 )
 
 app.include_router(anime.router, prefix='/anime', tags=['Anime'])
+app.include_router(auth.router, prefix='/auth', tags=['Auth'])
+
 
 @app.get('/health')
 async def status():
