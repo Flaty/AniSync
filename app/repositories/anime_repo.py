@@ -89,6 +89,12 @@ class AnimeRepository:
         stmt = select(exists().where(Anime.mal_id == mal_id))
         result = await self.session.execute(stmt)
         return cast(bool, result.scalar())
+
+    async def exists_by_id(self, anime_id: int) -> bool:
+
+        stmt = select(exists().where(Anime.id == anime_id))
+        result = await self.session.execute(stmt)
+        return cast(bool, result.scalar())
     
     async def sync_genres(self, anime_id: int, genres_input: list[GenreInput]) -> Optional[Anime]:
         anime = await self.get_by_id(anime_id)  

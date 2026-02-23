@@ -5,7 +5,7 @@ from fastapi import FastAPI
 
 from app.config import settings
 from app.external.jikan_client import JikanClient
-from app.api import anime, auth
+from app.api import anime, auth, users
 
 
 @asynccontextmanager
@@ -30,6 +30,7 @@ app = FastAPI(
 
 app.include_router(anime.router, prefix='/anime', tags=['Anime'])
 app.include_router(auth.router, prefix='/auth', tags=['Auth'])
+app.include_router(users.router, prefix='/users', tags=['Users'])
 
 
 @app.get('/health')

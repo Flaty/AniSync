@@ -9,6 +9,7 @@ from app.database import get_db
 from app.external.jikan_client import JikanClient
 from app.models.user import User
 from app.repositories.anime_repo import AnimeRepository
+from app.repositories.user_anime_list_repo import UserAnimeListRepository
 from app.repositories.user_repo import UserRepository
 from app.utils.jwt import decode_token
 
@@ -90,8 +91,15 @@ async def get_current_user(
 
 # ─── Type aliases ─────────────────────────────────────────────────────────────
 
+def get_user_anime_list_repo(
+    session: Annotated[AsyncSession, Depends(get_db)],
+) -> UserAnimeListRepository:
+    return UserAnimeListRepository(session)
+
+
 AnimeRepoDepends = Annotated[AnimeRepository, Depends(get_anime_repo)]
 JikanDepends = Annotated[JikanClient, Depends(get_jikan_client)]
 UserRepoDepends = Annotated[UserRepository, Depends(get_user_repo)]
 RedisDependency = Annotated[Redis, Depends(get_redis)]
 CurrentUser = Annotated[User, Depends(get_current_user)]
+UserAnimeListRepoDepends = Annotated[UserAnimeListRepository, Depends(get_user_anime_list_repo)]
