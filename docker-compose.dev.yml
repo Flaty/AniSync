@@ -12,6 +12,7 @@ services:
       - PYTHONUNBUFFERED=1
       - DEBUG=true
       - UV_NO_DEV=0
+      - JWT_SECRET=change-this-to-random-32-chars-string-in-production
     depends_on:
       postgres:
         condition: service_healthy
