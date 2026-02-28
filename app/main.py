@@ -5,11 +5,15 @@ from fastapi import FastAPI
 
 from app.config import settings
 from app.external.jikan_client import JikanClient
+from app.tasks.broker import broker
+import app.tasks.anime_tasks  # noqa: F401
 from app.api import anime, auth, users
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    await broker.startup()
+
     jikan_client = JikanClient()
     app.state.jikan_client = jikan_client
 
@@ -20,6 +24,7 @@ async def lifespan(app: FastAPI):
 
     await jikan_client.close()
     await redis_client.aclose()
+    await broker.shutdown()
 
 
 app = FastAPI(

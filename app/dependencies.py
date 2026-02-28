@@ -11,6 +11,7 @@ from app.models.user import User
 from app.repositories.anime_repo import AnimeRepository
 from app.repositories.user_anime_list_repo import UserAnimeListRepository
 from app.repositories.user_repo import UserRepository
+from app.services.anime_service import AnimeService
 from app.utils.jwt import decode_token
 
 
@@ -97,9 +98,17 @@ def get_user_anime_list_repo(
     return UserAnimeListRepository(session)
 
 
+def get_anime_service(
+    repo: Annotated[AnimeRepository, Depends(get_anime_repo)],
+    jikan: Annotated[JikanClient, Depends(get_jikan_client)],
+) -> AnimeService:
+    return AnimeService(repo=repo, jikan=jikan)
+
+
 AnimeRepoDepends = Annotated[AnimeRepository, Depends(get_anime_repo)]
 JikanDepends = Annotated[JikanClient, Depends(get_jikan_client)]
 UserRepoDepends = Annotated[UserRepository, Depends(get_user_repo)]
 RedisDependency = Annotated[Redis, Depends(get_redis)]
 CurrentUser = Annotated[User, Depends(get_current_user)]
 UserAnimeListRepoDepends = Annotated[UserAnimeListRepository, Depends(get_user_anime_list_repo)]
+AnimeServiceDepends = Annotated[AnimeService, Depends(get_anime_service)]
