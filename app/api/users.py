@@ -4,6 +4,7 @@ from fastapi import APIRouter, HTTPException, Query, status
 
 from app.dependencies import AnimeRepoDepends, CurrentUser, UserAnimeListRepoDepends
 from app.models.user_anime_list import WatchStatus
+from app.schemas.anime import AnimeResponse
 from app.schemas.user import UserResponse
 from app.schemas.user_anime_list import UserAnimeListCreate, UserAnimeListResponse, UserAnimeListUpdate
 
@@ -15,13 +16,22 @@ async def get_me(current_user: CurrentUser):
     return current_user
 
 
+@router.get('/me/recommendations', response_model=list[AnimeResponse], summary='Рекомендации по топ жанрам из списка')
+async def get_recommendations(
+    current_user: CurrentUser,
+    repo: AnimeRepoDepends,
+    limit: int = Query(10, ge=1, le=50),
+):
+    return await repo.get_recommendations(user_id=current_user.id, limit=limit)
+
+
 @router.get('/me/list', response_model=list[UserAnimeListResponse])
 async def get_my_list(
     current_user: CurrentUser,
     repo: UserAnimeListRepoDepends,
-    status: Optional[WatchStatus] = Query(None),
+    watch_status: Optional[WatchStatus] = Query(None, alias="status"),
 ):
-    return await repo.get_by_user(user_id=current_user.id, status=status)
+    return await repo.get_by_user(user_id=current_user.id, status=watch_status)
 
 
 @router.post('/me/list', response_model=UserAnimeListResponse, status_code=status.HTTP_201_CREATED)
@@ -51,7 +61,7 @@ async def update_in_list(
     current_user: CurrentUser,
     repo: UserAnimeListRepoDepends,
 ):
-    if not data.model_dump(exclude_none=True):
+    if not data.model_dump(exclude_unset=True):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Нет полей для обновления",

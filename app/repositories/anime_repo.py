@@ -1,11 +1,10 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update, exists , delete, insert
+from sqlalchemy import select, update, exists, delete, insert, func, or_
 from sqlalchemy.engine import CursorResult
-from app.models.anime import Anime, AnimeStatus, AnimeSeason
-from app.schemas.anime import AnimeCreate, AnimeUpdate
-from sqlalchemy.orm import selectinload
+from app.models.anime import Anime
+from app.models.genre import Genre, anime_genres
+from app.schemas.anime import AnimeCreate, AnimeUpdate, CatalogQuery
 from app.repositories.genre_repo import GenreRepository
-from app.models.genre import anime_genres
 from typing import Optional, cast, TypedDict
 
 class GenreInput(TypedDict):
@@ -19,12 +18,6 @@ class AnimeRepository:
     
     async def create(self, anime_data: AnimeCreate) -> Anime:
         data_dict = anime_data.model_dump(exclude_unset=True)
-        if 'status' in data_dict and isinstance(data_dict['status'], str):
-            data_dict['status'] = AnimeStatus(data_dict['status'])
-        
-        if 'season' in data_dict and isinstance(data_dict['season'], str):
-            data_dict['season'] = AnimeSeason(data_dict['season'])
-        
         anime = Anime(**data_dict)
         self.session.add(anime)
         await self.session.commit()
@@ -41,19 +34,71 @@ class AnimeRepository:
         result = await self.session.scalars(stmt)
         return result.one_or_none()
     
-    async def get_all(
-            self,
-            limit: int = 10,
-            offset: int = 0,
-            min_score: Optional[float] = None
-    ) -> list[Anime]:
-        
+    async def get_all(self, query: CatalogQuery) -> list[Anime]:
         stmt = select(Anime)
 
-        if min_score is not None:
-            stmt = stmt.where(Anime.score >= min_score)
-        
-        stmt = stmt.order_by(Anime.score.desc()).limit(limit).offset(offset)
+        if query.genre:
+            genre_subq = (
+                select(anime_genres.c.anime_id)
+                .join(Genre, Genre.id == anime_genres.c.genre_id)
+                .where(Genre.name.ilike(f"%{query.genre}%"))
+                .scalar_subquery()
+            )
+            stmt = stmt.where(Anime.id.in_(genre_subq))
+
+        if query.status is not None:
+            stmt = stmt.where(Anime.status == query.status)
+
+        if query.season is not None:
+            stmt = stmt.where(Anime.season == query.season)
+
+        if query.year is not None:
+            stmt = stmt.where(Anime.year == query.year)
+
+        if query.min_score is not None:
+            stmt = stmt.where(Anime.score >= query.min_score)
+
+        if query.search:
+            pattern = f"%{query.search}%"
+            stmt = stmt.where(
+                or_(
+                    Anime.title.ilike(pattern),
+                    Anime.title_english.ilike(pattern),
+                )
+            )
+
+        stmt = stmt.order_by(Anime.score.desc().nulls_last()).limit(query.limit).offset(query.offset)
+        result = await self.session.scalars(stmt)
+        return list(result.all())
+
+    async def get_recommendations(self, user_id: int, limit: int = 10) -> list[Anime]:
+        from app.models.user_anime_list import UserAnimeList
+
+        top_genre_ids = (
+            select(anime_genres.c.genre_id)
+            .join(UserAnimeList, UserAnimeList.anime_id == anime_genres.c.anime_id)
+            .where(UserAnimeList.user_id == user_id)
+            .group_by(anime_genres.c.genre_id)
+            .order_by(func.count().desc())
+            .limit(5)
+        )
+
+        in_list = (
+            select(UserAnimeList.anime_id)
+            .where(UserAnimeList.user_id == user_id)
+        )
+
+        stmt = (
+            select(Anime)
+            .join(anime_genres, anime_genres.c.anime_id == Anime.id)
+            .where(
+                anime_genres.c.genre_id.in_(top_genre_ids),
+                Anime.id.notin_(in_list),
+            )
+            .distinct()
+            .order_by(Anime.score.desc().nulls_last())
+            .limit(limit)
+        )
 
         result = await self.session.scalars(stmt)
         return list(result.all())
