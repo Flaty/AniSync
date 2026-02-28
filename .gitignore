@@ -49,9 +49,6 @@ Dockerfile.*
 docker-compose.override.yml
 *.dockerignore
 
-# Alembic / миграции (обычно не коммитят, если нет необходимости)
-alembic/versions/*  # ← если хочешь коммитить миграции — удали эту строку
-
 # Базы данных (если локально тестируешь)
 *.sqlite3
 *.db
@@ -77,6 +74,11 @@ coverage.xml
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
+
+# IDE и инструменты
+CLAUDE.md
+CLAUDE.local.md
+.claude/
 
 # Другое
 *.bak

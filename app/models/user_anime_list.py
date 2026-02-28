@@ -1,7 +1,7 @@
 from __future__ import annotations
 import enum
 from typing import TYPE_CHECKING
-from sqlalchemy import ForeignKey, Integer, UniqueConstraint, CheckConstraint
+from sqlalchemy import Enum as SAEnum, ForeignKey, Integer, UniqueConstraint, CheckConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import DateTime
 from app.models.base import Base
@@ -40,7 +40,10 @@ class UserAnimeList(Base):
         nullable=False,
         index=True
     )
-    status: Mapped[WatchStatus] = mapped_column(nullable=False)
+    status: Mapped[WatchStatus] = mapped_column(
+        SAEnum(WatchStatus, values_callable=lambda obj: [e.value for e in obj], name='watchstatus'),
+        nullable=False
+    )
     score: Mapped[float | None] = mapped_column(nullable=True)
     progress: Mapped[int | None] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime] = mapped_column(

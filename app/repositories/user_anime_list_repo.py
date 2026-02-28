@@ -22,7 +22,8 @@ class UserAnimeListRepository:
         )
         self.session.add(entry)
         await self.session.commit()
-        return await self.get_by_user_and_anime(user_id, data.anime_id)
+        await self.session.refresh(entry, attribute_names=["anime"])
+        return entry
 
     async def get_by_user(
         self,
@@ -49,7 +50,7 @@ class UserAnimeListRepository:
     async def update(
         self, user_id: int, anime_id: int, data: UserAnimeListUpdate
     ) -> Optional[UserAnimeList]:
-        values = data.model_dump(exclude_none=True)
+        values = data.model_dump(exclude_unset=True)
         stmt = (
             update(UserAnimeList)
             .where(
